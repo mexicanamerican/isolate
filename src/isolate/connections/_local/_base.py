@@ -183,8 +183,16 @@ class PythonExecutionBase(Generic[ConnectionType]):
             self.environment_path, *self.extra_inheritance_paths
         )
 
+        # Strip NOMAD_ env vars to avoid leaking infrastructure details
+        # to user code, but keep NOMAD_ALLOC_PORT_* for port discovery.
+        filtered_env = {
+            k: v
+            for k, v in os.environ.items()
+            if not k.startswith("NOMAD_") or k.startswith("NOMAD_ALLOC_PORT_")
+        }
+
         return {
-            **os.environ,
+            **filtered_env,
             **custom_vars,
         }
 
